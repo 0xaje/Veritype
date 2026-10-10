@@ -16,10 +16,16 @@ export function executeQloo(operation, input, timeoutMs = 30000) {
     child.on('error', err => finish(err));
     child.on('close', code => {
       if (settled) return;
-      if (code !== 0) return finish(new Error('Qloo process exited unsuccessfully'));
+      if (code !== 0) {
+        const detail = (stderr || stdout).trim();
+        return finish(new Error(`Qloo process exited with code ${code}${detail ? ': ' + detail : ''}`));
+      }
       try {
         const result = JSON.parse(stdout);
-        if (result.status !== 'ok') return finish(new Error('Qloo returned non-ok status'));
+        if (result.status !== 'ok') {
+          const msg = result.error?.message || result.error || 'Qloo returned non-ok status';
+          return finish(new Error(msg));
+        }
         finish(null, result);
       } catch { finish(new Error('Invalid Qloo response')); }
     });

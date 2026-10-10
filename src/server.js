@@ -22,7 +22,7 @@ const server = http.createServer(async (req, res) => {
     send(res, 200, { audit_id: randomUUID(), captured_at: new Date().toISOString(), result });
   } catch (error) {
     console.error('Execution failed:', error.message);
-    send(res, 502, { error: 'Execution failed; check local logs' });
+    send(res, 502, { error: 'Execution failed; check local logs', detail: error.message });
   }
 });
 server.listen(port, '127.0.0.1', () => console.log('Veritype local foundation on http://127.0.0.1:' + port));
