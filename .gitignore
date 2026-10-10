@@ -147,3 +147,6 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Submodules / cloned reference kits
+qloo-hackathon-kit/
