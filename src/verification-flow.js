@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { searchQlooEntities } from './entity-search.js';
 import { runPlanAudit } from './plan-audit.js';
+import { executeQloo } from './qloo.js';
+import { summarizeRecommendations } from './evidence.js';
 import { buildChallenges, retestRepair } from './challenge-repair.js';
 
 const sessions = new Map();
@@ -11,7 +13,7 @@ function requireText(value, field) {
   if (typeof value !== 'string' || !value.trim() || value.length > 120) throw new TypeError(field + ' must be 1-120 characters');
   return value.trim();
 }
-export function createVerificationFlow({ search = searchQlooEntities, audit = runPlanAudit, now = Date.now } = {}) {
+export function createVerificationFlow({ search = searchQlooEntities, audit = runPlanAudit, recommend = executeQloo, now = Date.now } = {}) {
   return {
     async search(value) {
       const result = await search(value);
@@ -40,6 +42,20 @@ export function createVerificationFlow({ search = searchQlooEntities, audit = ru
       sessions.set(verification_token, { selected: entry.selected, expires_at_ms: current + TTL_MS, kind: 'verified_selection' });
       return { status: 'selected_from_qloo_results', verification_token, entity: match,
         note: 'User selected an entity returned by Qloo. This is identity confirmation, not an affinity assessment.' };
+    },
+    async discover(value) {
+      const token = requireText(value?.verification_token, 'verification_token');
+      const current = now();
+      prune(current);
+      const entry = sessions.get(token);
+      if (!entry || entry.kind !== 'verified_selection') throw new TypeError('Verification token not found or expired');
+      const request = { target_type: 'brand', signals: [entry.selected.entity_id], limit: 10, explain: true };
+      const raw = await recommend('recommend', request);
+      const assessment = summarizeRecommendations(raw);
+      const results = assessment.results.filter(item => item.name && item.entity_id);
+      return { status: 'QLOO_RECOMMENDATIONS', source_entity_id: entry.selected.entity_id,
+        request, results, provenance: raw.provenance ?? null,
+        note: 'These are Qloo recommendations, not ranked comparisons with your proposed brand. Select candidates and run a verified audit to compare them.' };
     },
     async audit(value) {
       const token = requireText(value?.verification_token, 'verification_token');
