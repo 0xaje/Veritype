@@ -52,3 +52,25 @@ test('selection cannot use an entity not returned by search',async()=>{
   const search=await f.flow.search({query:'Fixture Show'});
   assert.throws(()=>f.flow.select({search_id:search.search_id,entity_id:brandId}),/not returned/);
 });
+
+test('verification tokens cannot be reused in a different flow instance',async()=>{
+  const first=fixture(),second=fixture();
+  const token=await verified(first);
+  await assert.rejects(second.flow.discover({verification_token:token}),/not found or expired/);
+  assert.equal(second.calls.length,0);
+});
+test('expired search sessions cannot be selected',async()=>{
+  const f=fixture();
+  const search=await f.flow.search({query:'Fixture Show'});
+  f.advance(15*60*1000+1);
+  assert.throws(()=>f.flow.select({search_id:search.search_id,entity_id:sourceId}),/not found or expired/);
+});
+test('invalid Qloo recommendation response is rejected rather than represented as evidence',async()=>{
+  const f=createVerificationFlow({
+    search:async()=>({matches:[{entity_id:sourceId,name:'Fixture Show'}]}),
+    recommend:async()=>({operation:'recommend',status:'failed',results:[]})
+  });
+  const search=await f.search({query:'Fixture Show'});
+  const selection=f.select({search_id:search.search_id,entity_id:sourceId});
+  await assert.rejects(f.discover({verification_token:selection.verification_token}),/successful Qloo recommend response is required/);
+});
