@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { randomUUID } from 'node:crypto';
+try { process.loadEnvFile?.(); } catch {}
 import { executeQloo, OPERATIONS } from './qloo.js';
 import { runBrandAudit } from './audit.js';
 import { runRankAudit } from './rank-audit.js';

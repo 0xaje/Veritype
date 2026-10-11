@@ -47,6 +47,21 @@ qloo exec find_tags --input-file request.json
 
 Inspect `qloo exec --help` and the official kit before implementing any additional workflows. Actual response fields, available filters, and comparison rules must be validated from live results rather than assumed.
 
+### Local Ollama Extraction (VT-006)
+
+Veritype uses local Ollama for structured plan extraction with strict JSON schema enforcement and verbatim grounding:
+
+```bash
+# Check installed models
+ollama list
+
+# Configure local model in environment (e.g. qwen2.5:1.5b)
+export OLLAMA_MODEL="qwen2.5:1.5b"
+export OLLAMA_BASE_URL="http://127.0.0.1:11434"
+```
+
+Extraction requests (`POST /api/plans/extract`) query the local Ollama instance with `stream: false` and strict JSON schema validation, returning a reviewable draft without requiring external model API keys.
+
 ## VT-001 acceptance criteria
 
 1. The hackathon API connection is authenticated.
