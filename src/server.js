@@ -1,4 +1,6 @@
 import http from 'node:http';
+import { readFile } from 'node:fs/promises';
+const ASSETS = new Map([['/', ['index.html','text/html; charset=utf-8']], ['/app.css',['app.css','text/css; charset=utf-8']], ['/app.js',['app.js','text/javascript; charset=utf-8']]]);
 import { randomUUID } from 'node:crypto';
 try { process.loadEnvFile?.(); } catch {}
 import { executeQloo, OPERATIONS } from './qloo.js';
@@ -14,6 +16,15 @@ function send(res, status, data) {
   res.end(JSON.stringify(data));
 }
 const server = http.createServer(async (req, res) => {
+  if (req.method === 'GET' && ASSETS.has(req.url)) {
+    try {
+      const [filename, contentType] = ASSETS.get(req.url);
+      const file = await readFile(new URL('../public/' + filename, import.meta.url));
+      res.writeHead(200, { 'content-type': contentType, 'cache-control': 'no-store',
+        'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'" });
+      return res.end(file);
+    } catch { return send(res, 500, { error: 'UI asset unavailable' }); }
+  }
   if (req.method === 'GET' && req.url === '/health') return send(res, 200, { status: 'ok', qloo: 'not_checked' });
   if (req.method !== 'POST' || !['/api/qloo/execute', '/api/audits/brand', '/api/audits/brand/rank', '/api/audits/plan', '/api/plans/extract', '/api/qloo/entities/search', '/api/qloo/entities/select', '/api/audits/plan/verified', '/api/audits/plan/repair'].includes(req.url)) return send(res, 404, { error: 'Not found' });
   // This is a development-only endpoint. Do not expose it publicly.
