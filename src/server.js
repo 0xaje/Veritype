@@ -6,7 +6,8 @@ import { runBrandAudit } from './audit.js';
 import { runRankAudit } from './rank-audit.js';
 import { runPlanAudit } from './plan-audit.js';
 import { extractPlan } from './plan-extraction.js';
-import { searchQlooEntities } from './entity-search.js';
+import { createVerificationFlow } from './verification-flow.js';
+const verification = createVerificationFlow();
 const port = Number(process.env.PORT || 3100);
 function send(res, status, data) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -14,7 +15,7 @@ function send(res, status, data) {
 }
 const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && req.url === '/health') return send(res, 200, { status: 'ok', qloo: 'not_checked' });
-  if (req.method !== 'POST' || !['/api/qloo/execute', '/api/audits/brand', '/api/audits/brand/rank', '/api/audits/plan', '/api/plans/extract', '/api/qloo/entities/search'].includes(req.url)) return send(res, 404, { error: 'Not found' });
+  if (req.method !== 'POST' || !['/api/qloo/execute', '/api/audits/brand', '/api/audits/brand/rank', '/api/audits/plan', '/api/plans/extract', '/api/qloo/entities/search', '/api/qloo/entities/select', '/api/audits/plan/verified'].includes(req.url)) return send(res, 404, { error: 'Not found' });
   // This is a development-only endpoint. Do not expose it publicly.
   if (!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return send(res, 403, { error: 'Local access only' });
   try {
@@ -25,8 +26,17 @@ const server = http.createServer(async (req, res) => {
     }
     let payload;
     try { payload = JSON.parse(body); } catch { return send(res, 400, { error: 'Invalid JSON' }); }
+    if (req.url === '/api/qloo/entities/select' || req.url === '/api/audits/plan/verified') {
+      try {
+        const result = req.url === '/api/qloo/entities/select' ? verification.select(payload) : await verification.audit(payload);
+        return send(res, 200, result);
+      } catch (error) {
+        if (error instanceof TypeError) return send(res, 400, { error: error.message });
+        throw error;
+      }
+    }
     if (req.url === '/api/qloo/entities/search') {
-      try { return send(res, 200, await searchQlooEntities(payload)); }
+      try { return send(res, 200, await verification.search(payload)); }
       catch (error) {
         if (error instanceof TypeError) return send(res, 400, { error: error.message });
         throw error;
