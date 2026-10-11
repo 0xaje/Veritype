@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { isAllowedLocalOrigin } from './local-origin.js';
 import { readFile } from 'node:fs/promises';
 const ASSETS = new Map([['/', ['index.html','text/html; charset=utf-8']], ['/app.css',['app.css','text/css; charset=utf-8']], ['/app.js',['app.js','text/javascript; charset=utf-8']], ['/history.js',['history.js','text/javascript; charset=utf-8']], ['/revision-guard.js',['revision-guard.js','text/javascript; charset=utf-8']]]);
 import { randomUUID } from 'node:crypto';
@@ -29,6 +30,8 @@ const server = http.createServer(async (req, res) => {
   if (req.method !== 'POST' || !['/api/qloo/execute', '/api/audits/brand', '/api/audits/brand/rank', '/api/audits/plan', '/api/plans/extract', '/api/qloo/entities/search', '/api/qloo/entities/select', '/api/qloo/brands/discover', '/api/audits/plan/verified', '/api/audits/plan/repair'].includes(req.url)) return send(res, 404, { error: 'Not found' });
   // This is a development-only endpoint. Do not expose it publicly.
   if (!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return send(res, 403, { error: 'Local access only' });
+  if (!isAllowedLocalOrigin(req.headers.origin, port)) return send(res, 403, { error: 'Cross-origin requests are not allowed' });
+  if (req.headers['sec-fetch-site'] === 'cross-site') return send(res, 403, { error: 'Cross-site requests are not allowed' });
   try {
     let body = '';
     for await (const chunk of req) {
