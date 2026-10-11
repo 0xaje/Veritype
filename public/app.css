@@ -55,3 +55,26 @@ footer{border-color:#d9d0c2;color:#bb4c39}
 footer span{color:#82776a}
 @media(max-width:900px){.studio-layout{grid-template-columns:1fr}.studio-input{border-right:0;border-bottom:1px solid #d8ccbb}.studio-label span:last-child{display:none}.hero:before{display:none}}
 @media(max-width:700px){.hero{padding:65px 24px}.top{background:#f6f1e8}.studio-input,.studio-evidence{padding:8px}.panel{padding:24px 12px}.rank{grid-template-columns:30px 1fr 68px}}
+
+/* VT-011 investigation clarity and evidence display */
+.investigation-empty{margin:25px 0 5px;padding:35px 27px;background:repeating-linear-gradient(135deg,#faf3e9,#faf3e9 13px,#f7eee3 13px,#f7eee3 14px);border:1px solid #e5d5c2;min-height:310px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+.investigation-empty[hidden]{display:none}
+.empty-symbol{font-family:Georgia,serif;font-size:62px;color:#c85440;line-height:1}
+.investigation-empty h4{font-family:Georgia,serif;font-size:28px;font-weight:400;margin:12px 0;color:#28251f}
+.investigation-empty p{color:#75685a;line-height:1.9;font-size:14px;margin:6px 0}
+.investigation-empty .empty-foot{border-top:1px solid #ddcdbb;padding-top:15px;margin-top:15px;font-size:12px}
+.chart-caption{font-size:12px;line-height:1.6;color:#77695d!important}
+.affinity-row{padding:12px 0;border-bottom:1px solid #e6d9ca}
+.affinity-heading{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#302a24}
+.affinity-heading strong{font-variant-numeric:tabular-nums;font-size:13px;color:#9e4332}
+.affinity-track{height:9px;margin-top:10px;background:#eadfd1;overflow:hidden;border-radius:1px}
+.affinity-fill{height:100%;background:#b8a18e;transition:width .4s ease}
+.affinity-row.is-proposed .affinity-fill{background:#cc4d39}
+.proposed-tag{display:block;color:#b44935;font-size:9px;font-weight:800;letter-spacing:.13em;margin-top:7px}
+.decision-comparison{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+.decision-pane{background:#f4e9dc;border:1px solid #dfcdbb;padding:17px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.decision-pane:last-child{background:#f5ded6;border-color:#d7a89b}
+.decision-pane small{font-size:10px;font-weight:800;letter-spacing:.12em;color:#9b594a}
+.decision-pane strong{font-family:Georgia,serif;font-size:24px;font-weight:500;overflow-wrap:anywhere}
+.decision-pane span{font-size:13px;color:#67594d}
+@media(max-width:550px){.decision-comparison{grid-template-columns:1fr}.investigation-empty{padding:25px 18px}}
