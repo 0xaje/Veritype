@@ -1,3 +1,4 @@
+import { readHistory as loadHistory, saveHistory, deleteHistory } from './history.js';
 const $ = id => document.getElementById(id);
 const fitIds=['fit-category','fit-rights','fit-budget'];
 function updateFit(){const n=fitIds.filter(id=>$(id).checked).length;$('fit-summary').textContent=n+' of 3 suitability checks marked. These are your assessments, not Qloo findings.';}
@@ -52,10 +53,7 @@ function filterDiscovery(){
 }
 $('brand-filter').addEventListener('input',filterDiscovery);
 
-const HISTORY_KEY='veritype-investigations-v1';
-function readHistory(){
-  try{const v=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');return Array.isArray(v)?v.filter(x=>x&&typeof x.id==='string'&&x.audit&&x.saved_at).slice(0,10):[];}catch{return [];}
-}
+const readHistory=()=>loadHistory(localStorage);
 function renderHistory(){
   const root=$('history-list');clear(root);
   const history=readHistory();
@@ -76,7 +74,7 @@ function renderHistory(){
     const remove=make('button','Delete snapshot','secondary');remove.type='button';
     remove.addEventListener('click',()=>{
       if(!window.confirm('Delete this locally saved investigation?'))return;
-      try{localStorage.setItem(HISTORY_KEY,JSON.stringify(readHistory().filter(x=>x.id!==entry.id)));renderHistory();}
+      try{deleteHistory(localStorage,entry.id);renderHistory();}
       catch{notice('Browser storage is unavailable. Could not delete snapshot.',true);}
     });
     card.append(open,remove);root.append(card);
@@ -86,8 +84,7 @@ $('save-investigation').addEventListener('click',()=>{
   if(!state.audit){notice('Run a verified audit before saving.',true);return;}
   const entry={id:crypto.randomUUID(),saved_at:new Date().toISOString(),source:state.selected?.name||$('source').value,candidate:$('candidate').value,audit:state.audit,retest:state.retest};
   try{
-    const history=readHistory();history.unshift(entry);
-    localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,10)));
+    saveHistory(localStorage,entry);
     renderHistory();notice('Audit snapshot saved locally. It will not refresh automatically.');
   }catch{notice('Unable to save audit. Browser storage may be disabled or full.',true);}
 });
