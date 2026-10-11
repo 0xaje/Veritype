@@ -1,6 +1,6 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
-const ASSETS = new Map([['/', ['index.html','text/html; charset=utf-8']], ['/app.css',['app.css','text/css; charset=utf-8']], ['/app.js',['app.js','text/javascript; charset=utf-8']], ['/history.js',['history.js','text/javascript; charset=utf-8']]]);
+const ASSETS = new Map([['/', ['index.html','text/html; charset=utf-8']], ['/app.css',['app.css','text/css; charset=utf-8']], ['/app.js',['app.js','text/javascript; charset=utf-8']], ['/history.js',['history.js','text/javascript; charset=utf-8']], ['/revision-guard.js',['revision-guard.js','text/javascript; charset=utf-8']]]);
 import { randomUUID } from 'node:crypto';
 try { process.loadEnvFile?.(); } catch {}
 import { executeQloo, OPERATIONS } from './qloo.js';
