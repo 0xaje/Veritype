@@ -12,7 +12,7 @@ No fabricated Qloo results, hardcoded successful verdicts, mock API responses pr
 
 ## Current implementation status
 
-**Foundation / integration validation.** This README describes the intended product; it does not claim the audit pipeline, hosted application, or Qloo integration is already working. Each capability must be verified against the real hackathon API before it is marked complete.
+**VT-010 local application implemented (live browser verification pending).** The localhost frontend at `http://127.0.0.1:3100/` connects plan extraction, Qloo search and selection, brand comparison, evidence inspection, challenge, approval and fresh re-test. VT-009 backend tests passed 31/31 and the user verified a live Qloo brand challenge and repair. The frontend has not yet been independently browser-tested. This is not a hardened or publicly hosted service; music, venue and dining are not implemented.
 
 ## Qloo hackathon environment
 
@@ -61,6 +61,19 @@ export OLLAMA_BASE_URL="http://127.0.0.1:11434"
 ```
 
 Extraction requests (`POST /api/plans/extract`) query the local Ollama instance with `stream: false` and strict JSON schema validation, returning a reviewable draft without requiring external model API keys.
+
+## Run the local workspace
+
+```bash
+git pull --ff-only origin main
+npm test
+export OLLAMA_MODEL="qwen2.5:1.5b"
+npm run dev
+```
+
+Open **http://127.0.0.1:3100/** in your browser on the machine running Veritype. Paste a plan, extract and review claims, select the source returned by Qloo, compare brand candidates, inspect evidence and explicitly approve a re-test. This is a localhost-only development workflow.
+
+**Important:** This interface currently evaluates one reviewed brand claim at a time. The local model is a drafting assistant; Qloo supplies the cultural evidence. Entity selection sessions expire after 15 minutes and reset when the server restarts. Never expose the development server directly to the public internet.
 
 ## VT-001 acceptance criteria
 
