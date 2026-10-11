@@ -5,7 +5,7 @@ for(const id of fitIds)$(id).addEventListener('change',updateFit);
 const state = { token:null, selected:null, audit:null, discovery:[] };
 const make = (tag,text,cls) => { const e=document.createElement(tag);if(text!=null)e.textContent=String(text);if(cls)e.className=cls;return e; };
 const clear = el => el.replaceChildren();
-function invalidateAudit(){state.audit=null;clear($('audit-results'));clear($('challenges'));clear($('retest'));$('investigation-empty').hidden=false;}
+function invalidateAudit(){$('history-save').hidden=true;state.audit=null;clear($('audit-results'));clear($('challenges'));clear($('retest'));$('investigation-empty').hidden=false;}
 function invalidateSelection(){state.token=null;state.selected=null;state.discovery=[];invalidateAudit();$('audit').disabled=true;$('selected').textContent='No verified source selected.';$('discovery').hidden=true;clear($('discovery-results'));clear($('matches'));$('discovery-count').textContent='';$('brand-filter').value='';for(const id of fitIds)$(id).checked=false;updateFit();}
 $('plan').addEventListener('input',()=>{invalidateSelection();$('comparison-status').textContent='Plan changed. Extract claims again and verify the source.';});
 $('source').addEventListener('input',()=>{invalidateSelection();$('comparison-status').textContent='Source changed. Search Qloo and select the correct entity again.';});
@@ -18,7 +18,7 @@ $('search').addEventListener('click',()=>busy($('search'),async()=>{const query=
 function evidenceDetails(parent, finding){const d=make('details',null,'evidence');d.append(make('summary','Inspect Qloo request, response and provenance'));d.append(make('pre',JSON.stringify({request:finding.request,integrity:finding.integrity,evidence:finding.evidence},null,2)));parent.append(d);}
 function renderAudit(audit){$('investigation-empty').hidden=true;const root=$('audit-results');clear(root);for(const f of audit.findings||[]){const card=make('div',null,'result');card.append(make('h4',f.claim?.candidate+' · '+f.status));card.append(make('p',(f.verdict==='OBSERVED_IN_RANKING'?'Cultural affinity observed in this comparison':f.verdict)+(f.integrity?' · Evidence integrity: '+f.integrity.status:'')));if(f.assessment?.results){const results=f.assessment.results;const caption=make('p','Relative affinity among the evaluated candidates — not predicted sales or campaign success.','chart-caption');card.append(caption);const max=Math.max(...results.map(x=>Number.isFinite(x.affinity)?x.affinity:0),0);for(const item of results){const line=make('div',null,'affinity-row'+(item.name?.toLowerCase()===f.claim?.candidate?.toLowerCase()?' is-proposed':''));const heading=make('div',null,'affinity-heading');heading.append(make('span','#'+item.rank+'  '+item.name),make('strong',item.affinity==null?'Unavailable':item.affinity.toFixed(4)));const track=make('div',null,'affinity-track');const bar=make('div',null,'affinity-fill');bar.style.width=(max>0&&Number.isFinite(item.affinity)?Math.max(0,Math.min(100,100*item.affinity/max)):0)+'%';track.append(bar);line.append(heading,track);if(item.name?.toLowerCase()===f.claim?.candidate?.toLowerCase())line.append(make('small','ORIGINAL PROPOSAL','proposed-tag'));card.append(line);}}if(f.evidence)evidenceDetails(card,f);root.append(card);} }
 function renderChallenges(audit){const root=$('challenges');clear(root);if(!audit.challenges?.length){root.append(make('p','No higher-ranked alternatives were supported by this audit.'));return;}for(const c of audit.challenges){const card=make('div',null,'result');card.append(make('h4','Challenge · '+c.current.name));card.append(make('p',c.explanation));card.append(make('p',c.limitation));for(const alt of c.alternatives){const button=make('button','Approve '+alt.name+' and re-test');button.type='button';button.className='secondary';button.style.margin='5px 9px 5px 0';button.addEventListener('click',()=>{if(!window.confirm('Approve '+alt.name+' as a proposed replacement and run a fresh Qloo comparison?'))return;busy(button,async()=>{const result=await post('/api/audits/plan/repair',{audit_id:audit.audit_id,verification_token:state.token,claim_index:c.claim_index,replacement_entity_id:alt.entity_id,approved:true});const output=$('retest');clear(output);const summary=make('div',null,'result');summary.append(make('h4','Decision re-tested · '+result.status));const comparison=make('div',null,'decision-comparison');for(const [label,candidate] of [['ORIGINAL',result.before?.candidate],['APPROVED ALTERNATIVE',result.after?.candidate]]){const pane=make('div',null,'decision-pane');pane.append(make('small',label),make('strong',candidate?.name||'Unavailable'),make('span','Rank #'+(candidate?.rank??'—')));comparison.append(pane);}summary.append(comparison);summary.append(make('p',result.limitation||'The comparison does not predict commercial performance.'));summary.append(make('p','A fresh request was made to re-evaluate the approved candidate. Inspect the evidence below.','chart-caption'));output.append(summary);if(result.retest?.findings){for(const finding of result.retest.findings){if(finding.evidence)evidenceDetails(summary,finding);}}notice('Re-test returned: '+result.status);});});card.append(button);}root.append(card);}}
-$('audit').addEventListener('click',()=>busy($('audit'),async()=>{if(!state.token)throw Error('Select a verified source first.');const plan=$('plan').value.trim(),candidate=$('candidate').value.trim();if(!plan||!candidate)throw Error('A plan and proposed brand are required.');const alternatives=$('alternatives').value.split(',').map(s=>s.trim()).filter(Boolean);if(!alternatives.length)throw Error('Add at least one comparison brand to enable ranked challenges.');const fitCount=fitIds.filter(id=>$(id).checked).length;if(fitCount<3&&!window.confirm('You have not marked all partnership feasibility checks. Qloo affinity alone does not establish suitability. Continue with a cultural-affinity-only audit?'))return;const result=await post('/api/audits/plan/verified',{verification_token:state.token,plan,claims:[{dimension:'brand',candidate,alternatives,excerpt:plan.includes(candidate)?candidate:''}]});state.audit=result;renderAudit(result);renderChallenges(result);clear($('retest'));notice('Live Qloo audit returned: '+result.status+'. Review the evidence below.');}));
+$('audit').addEventListener('click',()=>busy($('audit'),async()=>{if(!state.token)throw Error('Select a verified source first.');const plan=$('plan').value.trim(),candidate=$('candidate').value.trim();if(!plan||!candidate)throw Error('A plan and proposed brand are required.');const alternatives=$('alternatives').value.split(',').map(s=>s.trim()).filter(Boolean);if(!alternatives.length)throw Error('Add at least one comparison brand to enable ranked challenges.');const fitCount=fitIds.filter(id=>$(id).checked).length;if(fitCount<3&&!window.confirm('You have not marked all partnership feasibility checks. Qloo affinity alone does not establish suitability. Continue with a cultural-affinity-only audit?'))return;const result=await post('/api/audits/plan/verified',{verification_token:state.token,plan,claims:[{dimension:'brand',candidate,alternatives,excerpt:plan.includes(candidate)?candidate:''}]});state.audit=result;$('history-save').hidden=false;renderAudit(result);renderChallenges(result);clear($('retest'));notice('Live Qloo audit returned: '+result.status+'. Review the evidence below.');}));
 
 $('discover').addEventListener('click',()=>busy($('discover'),async()=>{
   if(!state.token)throw Error('Select a verified Qloo source first.');
@@ -51,3 +51,44 @@ function filterDiscovery(){
   $('discovery-count').textContent=rows.length?(visible+' of '+rows.length+' Qloo recommendations shown'):'No Qloo recommendations loaded.';
 }
 $('brand-filter').addEventListener('input',filterDiscovery);
+
+const HISTORY_KEY='veritype-investigations-v1';
+function readHistory(){
+  try{const v=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');return Array.isArray(v)?v.filter(x=>x&&typeof x.id==='string'&&x.audit&&x.saved_at).slice(0,10):[];}catch{return [];}
+}
+function renderHistory(){
+  const root=$('history-list');clear(root);
+  const history=readHistory();
+  if(!history.length){root.append(make('p','No investigations saved on this browser. Run an audit, then choose Save audit to this browser.','hint'));return;}
+  for(const entry of history){
+    const card=make('div',null,'result');
+    card.append(make('h4',(entry.candidate||'Brand audit')+' · '+(entry.source||'Unspecified source')));
+    card.append(make('p','Saved '+new Date(entry.saved_at).toLocaleString()+' · Historical snapshot; not current Qloo evidence.','hint'));
+    const open=make('button','Inspect saved evidence','secondary');open.type='button';
+    open.addEventListener('click',()=>{
+      const d=card.querySelector('.history-detail');
+      if(d){d.remove();return;}
+      const details=make('details',null,'history-detail evidence');details.open=true;
+      details.append(make('summary','Saved audit JSON (captured evidence)'));
+      details.append(make('pre',JSON.stringify(entry.audit,null,2)));
+      card.append(details);
+    });
+    const remove=make('button','Delete snapshot','secondary');remove.type='button';
+    remove.addEventListener('click',()=>{
+      if(!window.confirm('Delete this locally saved investigation?'))return;
+      try{localStorage.setItem(HISTORY_KEY,JSON.stringify(readHistory().filter(x=>x.id!==entry.id)));renderHistory();}
+      catch{notice('Browser storage is unavailable. Could not delete snapshot.',true);}
+    });
+    card.append(open,remove);root.append(card);
+  }
+}
+$('save-investigation').addEventListener('click',()=>{
+  if(!state.audit){notice('Run a verified audit before saving.',true);return;}
+  const entry={id:crypto.randomUUID(),saved_at:new Date().toISOString(),source:state.selected?.name||$('source').value,candidate:$('candidate').value,audit:state.audit};
+  try{
+    const history=readHistory();history.unshift(entry);
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(history.slice(0,10)));
+    renderHistory();notice('Audit snapshot saved locally. It will not refresh automatically.');
+  }catch{notice('Unable to save audit. Browser storage may be disabled or full.',true);}
+});
+renderHistory();
