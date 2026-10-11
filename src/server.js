@@ -15,7 +15,7 @@ function send(res, status, data) {
 }
 const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && req.url === '/health') return send(res, 200, { status: 'ok', qloo: 'not_checked' });
-  if (req.method !== 'POST' || !['/api/qloo/execute', '/api/audits/brand', '/api/audits/brand/rank', '/api/audits/plan', '/api/plans/extract', '/api/qloo/entities/search', '/api/qloo/entities/select', '/api/audits/plan/verified'].includes(req.url)) return send(res, 404, { error: 'Not found' });
+  if (req.method !== 'POST' || !['/api/qloo/execute', '/api/audits/brand', '/api/audits/brand/rank', '/api/audits/plan', '/api/plans/extract', '/api/qloo/entities/search', '/api/qloo/entities/select', '/api/audits/plan/verified', '/api/audits/plan/repair'].includes(req.url)) return send(res, 404, { error: 'Not found' });
   // This is a development-only endpoint. Do not expose it publicly.
   if (!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return send(res, 403, { error: 'Local access only' });
   try {
@@ -26,9 +26,10 @@ const server = http.createServer(async (req, res) => {
     }
     let payload;
     try { payload = JSON.parse(body); } catch { return send(res, 400, { error: 'Invalid JSON' }); }
-    if (req.url === '/api/qloo/entities/select' || req.url === '/api/audits/plan/verified') {
+    if (req.url === '/api/qloo/entities/select' || req.url === '/api/audits/plan/verified' || req.url === '/api/audits/plan/repair') {
       try {
-        const result = req.url === '/api/qloo/entities/select' ? verification.select(payload) : await verification.audit(payload);
+        const result = req.url === '/api/qloo/entities/select' ? verification.select(payload) :
+          req.url === '/api/audits/plan/repair' ? await verification.repair(payload) : await verification.audit(payload);
         return send(res, 200, result);
       } catch (error) {
         if (error instanceof TypeError) return send(res, 400, { error: error.message });
