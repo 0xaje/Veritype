@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { executeQloo } from './qloo.js';
 import { summarizeRanking } from './rank-evidence.js';
+import { verifyRankingIntegrity } from './evidence-integrity.js';
 
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function validateRankAuditRequest(value) {
@@ -23,11 +24,14 @@ export async function runRankAudit(value, { execute = executeQloo, now = () => n
     signals: [request.source_entity_id]
   };
   const result = await execute('rank', qlooInput);
+  const assessment = summarizeRanking(result, { candidateName: request.candidate_name });
+  const integrity = verifyRankingIntegrity(result, assessment, { candidateName: request.candidate_name,
+    expectedOptions: qlooInput.options, sourceEntityId: request.source_entity_id });
   return {
-    audit_id: uuid(), captured_at: now(), status: 'completed',
+    audit_id: uuid(), captured_at: now(), status: integrity.status === 'PASSED' ? 'completed' : 'integrity_failed',
     scope: 'brand_candidate_comparison',
-    input: request, qloo_input: qlooInput,
-    assessment: summarizeRanking(result, { candidateName: request.candidate_name }),
+    input: request, qloo_input: qlooInput, integrity,
+    assessment: integrity.status === 'PASSED' ? assessment : { verdict: 'INSUFFICIENT_EVIDENCE', finding: 'Evidence integrity check failed; ranking withheld.' },
     raw_evidence: result
   };
 }
