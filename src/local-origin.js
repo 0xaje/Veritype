@@ -7,6 +7,7 @@ export function isAllowedLocalOrigin(origin, port) {
   if (typeof origin !== 'string') return false;
   try {
     const parsed = new URL(origin);
+    if (parsed.username || parsed.password || parsed.pathname !== '/' || parsed.search || parsed.hash) return false;
     return parsed.origin === 'http://127.0.0.1:' + port ||
       parsed.origin === 'http://localhost:' + port;
   } catch { return false; }
