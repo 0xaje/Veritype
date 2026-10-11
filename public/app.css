@@ -89,3 +89,5 @@ footer span{color:#82776a}
 .discovery-item small{display:block;color:#877569;font-size:11px;margin-top:5px}
 .discovery-item button{font-size:12px;padding:9px 12px;flex-shrink:0}
 @media(max-width:550px){.discovery-item{align-items:flex-start;flex-direction:column}}
+
+.comparison-status{font-size:12px;line-height:1.6;color:#a44a39;background:#f6e9df;border-left:3px solid #c94d38;padding:10px 12px;margin:10px 0 16px}
