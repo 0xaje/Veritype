@@ -5,15 +5,16 @@ import { executeQloo } from './qloo.js';
 import { summarizeRecommendations } from './evidence.js';
 import { buildChallenges, retestRepair } from './challenge-repair.js';
 
-const sessions = new Map();
 const TTL_MS = 15 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function prune(now) { for (const [id, entry] of sessions) if (entry.expires_at_ms <= now) sessions.delete(id); }
 function requireText(value, field) {
   if (typeof value !== 'string' || !value.trim() || value.length > 120) throw new TypeError(field + ' must be 1-120 characters');
   return value.trim();
 }
 export function createVerificationFlow({ search = searchQlooEntities, audit = runPlanAudit, recommend = executeQloo, now = Date.now } = {}) {
+  // Each flow instance owns its own short-lived verification sessions.
+  const sessions = new Map();
+  const prune = current => { for (const [id, entry] of sessions) if (entry.expires_at_ms <= current) sessions.delete(id); };
   return {
     async search(value) {
       const result = await search(value);
