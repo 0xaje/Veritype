@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { executeQloo, OPERATIONS } from './qloo.js';
 import { runBrandAudit } from './audit.js';
 import { runRankAudit } from './rank-audit.js';
+import { runPlanAudit } from './plan-audit.js';
 const port = Number(process.env.PORT || 3100);
 function send(res, status, data) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -10,7 +11,7 @@ function send(res, status, data) {
 }
 const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && req.url === '/health') return send(res, 200, { status: 'ok', qloo: 'not_checked' });
-  if (req.method !== 'POST' || !['/api/qloo/execute', '/api/audits/brand', '/api/audits/brand/rank'].includes(req.url)) return send(res, 404, { error: 'Not found' });
+  if (req.method !== 'POST' || !['/api/qloo/execute', '/api/audits/brand', '/api/audits/brand/rank', '/api/audits/plan'].includes(req.url)) return send(res, 404, { error: 'Not found' });
   // This is a development-only endpoint. Do not expose it publicly.
   if (!['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return send(res, 403, { error: 'Local access only' });
   try {
@@ -21,6 +22,15 @@ const server = http.createServer(async (req, res) => {
     }
     let payload;
     try { payload = JSON.parse(body); } catch { return send(res, 400, { error: 'Invalid JSON' }); }
+    if (req.url === '/api/audits/plan') {
+      let audit;
+      try { audit = await runPlanAudit(payload); }
+      catch (error) {
+        if (error instanceof TypeError) return send(res, 400, { error: error.message });
+        throw error;
+      }
+      return send(res, 200, audit);
+    }
     if (req.url === '/api/audits/brand/rank') {
       let audit;
       try { audit = await runRankAudit(payload); }
