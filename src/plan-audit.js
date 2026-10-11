@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { executeQloo } from './qloo.js';
 import { summarizeRanking } from './rank-evidence.js';
+import { verifyRankingIntegrity } from './evidence-integrity.js';
 import { summarizeRecommendations } from './evidence.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -44,8 +45,14 @@ export async function runPlanAudit(value, { execute = executeQloo, uuid = random
       const assessment = operation === 'rank'
         ? summarizeRanking(raw, { candidateName: claim.candidate })
         : summarizeRecommendations(raw, { candidateName: claim.candidate });
-      findings.push({ claim_index: index, claim, status: 'EVALUATED', operation, request,
-        verdict: assessment.verdict, assessment, evidence: raw });
+      const integrity = operation === 'rank' ? verifyRankingIntegrity(raw, assessment, {
+        candidateName: claim.candidate, expectedOptions: request.options, sourceEntityId: input.source_entity_id
+      }) : null;
+      const passed = !integrity || integrity.status === 'PASSED';
+      findings.push({ claim_index: index, claim, status: passed ? 'EVALUATED' : 'INTEGRITY_FAILED', operation, request,
+        verdict: passed ? assessment.verdict : 'INSUFFICIENT_EVIDENCE',
+        assessment: passed ? assessment : { verdict: 'INSUFFICIENT_EVIDENCE', finding: 'Ranking withheld because evidence integrity check failed.' },
+        integrity, evidence: raw });
     } catch (error) {
       findings.push({ claim_index: index, claim, status: 'UPSTREAM_ERROR', verdict: 'INSUFFICIENT_EVIDENCE',
         reason: 'Qloo execution failed; no compatibility conclusion is possible.', evidence: null });
