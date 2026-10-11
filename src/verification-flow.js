@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { searchQlooEntities } from './entity-search.js';
 import { runPlanAudit } from './plan-audit.js';
+import { buildChallenges, retestRepair } from './challenge-repair.js';
 
 const sessions = new Map();
 const TTL_MS = 15 * 60 * 1000;
@@ -50,10 +51,28 @@ export function createVerificationFlow({ search = searchQlooEntities, audit = ru
         throw new TypeError('source_entity_id does not match selected Qloo entity');
       }
       const result = await audit({ ...value, source_entity_id: entry.selected.entity_id });
-      return { ...result, source_verification: {
+      const challenges = buildChallenges(result);
+      sessions.set(result.audit_id, { kind: 'audited_plan', audit: result, verification_token: token, expires_at_ms: current + TTL_MS });
+      return { ...result, challenges, source_verification: {
         method: 'user_selected_qloo_search_result',
         entity: entry.selected.match,
         selected_entity_id: entry.selected.entity_id
+      } };
+    },
+    async repair(value) {
+      const audit_id = requireText(value?.audit_id, 'audit_id');
+      const verification_token = requireText(value?.verification_token, 'verification_token');
+      const current = now();
+      prune(current);
+      const stored = sessions.get(audit_id);
+      const verified = sessions.get(verification_token);
+      if (!stored || stored.kind !== 'audited_plan' || stored.verification_token !== verification_token ||
+          !verified || verified.kind !== 'verified_selection') throw new TypeError('Audit or verification expired; run verified audit again');
+      if (value?.approved !== true) throw new TypeError('Explicit user approval is required');
+      const result = await retestRepair(stored.audit, value, { run: audit });
+      return { ...result, source_verification: {
+        method: 'user_selected_qloo_search_result',
+        selected_entity_id: verified.selected.entity_id
       } };
     }
   };
