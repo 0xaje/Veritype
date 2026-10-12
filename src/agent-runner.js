@@ -1,6 +1,9 @@
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout, stderr } from 'node:process';
 import { createVeritypeAgentClient } from './agent-client.js';
+import { formatAgentReport } from './agent-report.js';
+import { writeFile, mkdir } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 
 /**
  * Interactive local agent run. Ollama extracts the literal proposal; Qloo
@@ -62,7 +65,11 @@ export async function main(argv = process.argv.slice(2)){
         return match?.entity_id||match?.id||null;
       }
     });
-    stdout.write('\n'+JSON.stringify(result,null,2)+'\n');
+    const outputDir = 'out/agent-reviews';
+    await mkdir(outputDir,{recursive:true});
+    const evidencePath = outputDir+'/'+new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID()+'.json';
+    await writeFile(evidencePath,JSON.stringify(result,null,2)+'\n',{flag:'wx',mode:0o600});
+    stdout.write('\n'+formatAgentReport(result)+'\nEvidence file: '+evidencePath+'\n');
     if(result.status!=='REVIEW_REQUIRED')process.exitCode=1;
   }catch(error){
     stderr.write('Agent review failed: '+error.message+'\n');
