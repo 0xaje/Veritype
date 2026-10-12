@@ -16,6 +16,12 @@ export function formatAgentReport(result) {
     lines.push('Challenge: ' + challenge.current.name + ' (#' + challenge.current.rank + ', affinity ' + challenge.current.affinity + ')');
     for (const alternative of challenge.alternatives) lines.push('  Higher affinity: ' + alternative.name + ' (#' + alternative.rank + ', ' + alternative.affinity + ')');
   }
+  if (result?.repair) {
+    lines.push('Approved replacement: ' + result.repair.approval?.replacement);
+    lines.push('Fresh Qloo retest: ' + result.repair.status);
+    if (result.repair.after?.candidate) lines.push('Retested candidate: ' + result.repair.after.candidate.name);
+  }
+  if (result?.selected) lines.push('Selected Qloo source: ' + result.selected.name + ' [' + (result.selected.type || result.selected.types?.join(', ') || 'unknown type') + '] ' + (result.selected.entity_id || result.selected.id));
   if (result?.note) lines.push('Note: ' + result.note);
   lines.push('Decision: Human review required. Affinity does not establish category suitability, rights, or commercial feasibility.');
   return lines.join('\n');
