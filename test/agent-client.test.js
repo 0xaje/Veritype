@@ -45,3 +45,30 @@ test('agent adapter rejects missing entity review and remote origins',async()=>{
     plan:'Fixture campaign',sourceQuery:'Fixture Show',proposedBrand:'Fixture Nike'
   }),/selection callback/);
 });
+
+test('agent sends repair only after explicit human selection and retains retest status',async()=>{
+  const requests=[];
+  const fetchImpl=async(url,options)=>{
+    const path=new URL(url).pathname;
+    requests.push({path,payload:JSON.parse(options.body)});
+    if(path==='/api/audits/plan/verified')return {ok:true,json:async()=>({
+      audit_id:'audit-2',challenges:[{claim_index:0,alternatives:[{entity_id:'replacement-id',name:'Fixture Vans',affinity:0.9}]}]
+    })};
+    if(path==='/api/audits/plan/repair')return {ok:true,json:async()=>({
+      status:'RETESTED',approval:{replacement:'Fixture Vans'},after:{candidate:{name:'Fixture Vans'}}
+    })};
+    return {ok:true,json:async()=>replies[path]};
+  };
+  const client=createVeritypeAgentClient({fetchImpl});
+  const args={plan:'Fixture campaign',sourceQuery:'Fixture Show',proposedBrand:'Fixture Nike',
+    chooseEntity:async matches=>matches[0].entity_id,alternatives:['Fixture Vans']};
+  const declined=await client.inspect({...args,approveRepair:async()=>null});
+  assert.equal(declined.status,'REVIEW_REQUIRED');
+  assert.equal(requests.filter(x=>x.path==='/api/audits/plan/repair').length,0);
+  const approved=await client.inspect({...args,approveRepair:async()=>({claim_index:0,replacement_entity_id:'replacement-id'})});
+  assert.equal(approved.status,'RETESTED');
+  const repairs=requests.filter(x=>x.path==='/api/audits/plan/repair');
+  assert.equal(repairs.length,1);
+  assert.equal(repairs[0].payload.approved,true);
+  assert.equal(repairs[0].payload.audit_id,'audit-2');
+});
