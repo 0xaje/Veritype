@@ -20,7 +20,7 @@ export function createVeritypeAgentClient({ baseUrl = 'http://127.0.0.1:3100', f
     return body;
   }
   return {
-    async inspect({ plan, sourceQuery, proposedBrand, alternatives = [], chooseEntity, chooseAlternatives }) {
+    async inspect({ plan, sourceQuery, proposedBrand, alternatives = [], chooseEntity, chooseAlternatives, approveRepair }) {
       if (typeof plan !== 'string' || !plan.trim() || typeof sourceQuery !== 'string' || !sourceQuery.trim() ||
           typeof proposedBrand !== 'string' || !proposedBrand.trim()) throw new TypeError('Plan, sourceQuery and proposedBrand are required');
       if (typeof chooseEntity !== 'function') throw new TypeError('An explicit Qloo entity-selection callback is required');
@@ -49,8 +49,24 @@ export function createVeritypeAgentClient({ baseUrl = 'http://127.0.0.1:3100', f
         verification_token: selection.verification_token, plan,
         claims: [{ dimension: 'brand', candidate: proposedBrand, alternatives: choices }]
       });
+      let repair = null;
+      if (typeof approveRepair === 'function' && (audit.challenges || []).length) {
+        const decision = await approveRepair(audit.challenges);
+        if (decision !== null && decision !== undefined) {
+          const challenge = audit.challenges.find(c => c.claim_index === decision.claim_index);
+          const choice = challenge?.alternatives?.find(a => a.entity_id === decision.replacement_entity_id);
+          if (!choice) throw new TypeError('Replacement must match a challenged Qloo alternative');
+          repair = await request('/api/audits/plan/repair', {
+            audit_id: audit.audit_id,
+            verification_token: selection.verification_token,
+            claim_index: decision.claim_index,
+            replacement_entity_id: choice.entity_id,
+            approved: true
+          });
+        }
+      }
       return {
-        status: 'REVIEW_REQUIRED', selected: selection.entity, discovery, audit,
+        status: repair ? repair.status : 'REVIEW_REQUIRED', repair, selected: selection.entity, discovery, audit,
         review: { challenges: audit.challenges || [], human_approval_required: true,
           note: 'An agent must not claim an alternative was approved or adopted.' }
       };
