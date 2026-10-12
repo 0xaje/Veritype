@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
  * Interactive local agent run. Ollama extracts the literal proposal; Qloo
  * supplies evidence. The operator selects entity identity and approves nothing.
  */
-export async function runAgentReview({ plan, baseUrl = 'http://127.0.0.1:3100', fetchImpl = fetch, chooseEntity, chooseAlternatives }) {
+export async function runAgentReview({ plan, baseUrl = 'http://127.0.0.1:3100', fetchImpl = fetch, chooseEntity, chooseAlternatives, approveRepair }) {
   if (typeof plan !== 'string' || !plan.trim()) throw new TypeError('A non-empty campaign plan is required');
   const base = new URL(baseUrl);
   if (base.protocol !== 'http:' || !['127.0.0.1','localhost'].includes(base.hostname) ||
@@ -30,7 +30,7 @@ export async function runAgentReview({ plan, baseUrl = 'http://127.0.0.1:3100', 
   const client = createVeritypeAgentClient({baseUrl,fetchImpl});
   const review = await client.inspect({
     plan,sourceQuery:extracted.source_name,proposedBrand:brands[0].candidate,
-    chooseEntity, chooseAlternatives
+    chooseEntity, chooseAlternatives, approveRepair
   });
   return { ...review, extraction:extracted };
 }
@@ -45,6 +45,16 @@ export async function main(argv = process.argv.slice(2)){
   try{
     const result=await runAgentReview({
       plan,
+      approveRepair:async challenges=>{
+        stdout.write('\nHigher-affinity alternatives for explicit review (not automatically suitable partners):\n');
+        const options=challenges.flatMap(c=>(c.alternatives||[]).map(a=>({claim_index:c.claim_index,...a})));
+        for(const [i,a] of options.entries())stdout.write((i+1)+'. '+a.name+' (affinity '+a.affinity+')\n');
+        const number=(await rl.question('Select replacement to retest (Enter to reject): ')).trim();
+        if(!/^[1-9][0-9]*$/.test(number) || !options[Number(number)-1])return null;
+        const choice=options[Number(number)-1];
+        const approval=(await rl.question('Approve '+choice.name+' for a fresh Qloo retest? Type APPROVE exactly: ')).trim();
+        return approval==='APPROVE' ? {claim_index:choice.claim_index,replacement_entity_id:choice.entity_id} : null;
+      },
       chooseAlternatives:async (suggestions,proposedBrand)=>{
         stdout.write('\nQloo discovered potential brands. Cultural affinity does not establish partnership category or suitability.\n');
         for(const [i,item] of suggestions.entries())stdout.write((i+1)+'. '+item.name+'\n');
@@ -70,7 +80,7 @@ export async function main(argv = process.argv.slice(2)){
     const evidencePath = outputDir+'/'+new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomUUID()+'.json';
     await writeFile(evidencePath,JSON.stringify(result,null,2)+'\n',{flag:'wx',mode:0o600});
     stdout.write('\n'+formatAgentReport(result)+'\nEvidence file: '+evidencePath+'\n');
-    if(result.status!=='REVIEW_REQUIRED')process.exitCode=1;
+    if(!['REVIEW_REQUIRED','RETESTED'].includes(result.status))process.exitCode=1;
   }catch(error){
     stderr.write('Agent review failed: '+error.message+'\n');
     process.exitCode=1;
