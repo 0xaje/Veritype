@@ -12,7 +12,13 @@ No fabricated Qloo results, hardcoded successful verdicts, mock API responses pr
 
 ## Current implementation status
 
-**VT-010 local application implemented (live browser verification pending).** The localhost frontend at `http://127.0.0.1:3100/` connects plan extraction, Qloo search and selection, brand comparison, evidence inspection, challenge, approval and fresh re-test. VT-009 backend tests passed 31/31 and the user verified a live Qloo brand challenge and repair. The frontend has not yet been independently browser-tested. This is not a hardened or publicly hosted service; music, venue and dining are not implemented.
+**VT-023 — live browser acceptance pending.** The local frontend connects claim extraction, real Qloo entity search and selection, discovery, evidence-backed brand comparison, challenge, user approval, fresh re-test, and opt-in browser-local history.
+
+**Automated verification:** 58/58 tests passed in the developer's Ubuntu environment on October 12, 2026 (reported terminal output). This includes local HTTP smoke tests and an optional live Ollama extraction test. It **does not** prove that a complete browser investigation with fresh Qloo responses has passed.
+
+**Next acceptance gate:** Follow [VT-023 live Qloo acceptance](docs/vt023-live-acceptance.md), record genuine observed evidence and any blockers. No historical rankings should be substituted for new Qloo results.
+
+**Deployment boundary:** Development server listens on loopback only. It is not publicly hosted or production hardened. Music, venue and dining workflows remain unimplemented.
 
 ## Qloo hackathon environment
 
