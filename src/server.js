@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { isAllowedLocalOrigin } from './local-origin.js';
+import { agentManifest } from './agent-manifest.js';
 import { readFile } from 'node:fs/promises';
 const ASSETS = new Map([['/', ['index.html','text/html; charset=utf-8']], ['/app.css',['app.css','text/css; charset=utf-8']], ['/app.js',['app.js','text/javascript; charset=utf-8']], ['/history.js',['history.js','text/javascript; charset=utf-8']], ['/revision-guard.js',['revision-guard.js','text/javascript; charset=utf-8']]]);
 import { randomUUID } from 'node:crypto';
@@ -26,6 +27,7 @@ const server = http.createServer(async (req, res) => {
       return res.end(file);
     } catch { return send(res, 500, { error: 'UI asset unavailable' }); }
   }
+  if (req.method === 'GET' && req.url === '/api/agent/manifest') return send(res, 200, agentManifest);
   if (req.method === 'GET' && req.url === '/health') return send(res, 200, { status: 'ok', qloo: 'not_checked' });
   if (req.method !== 'POST' || !['/api/qloo/execute', '/api/audits/brand', '/api/audits/brand/rank', '/api/audits/plan', '/api/plans/extract', '/api/qloo/entities/search', '/api/qloo/entities/select', '/api/qloo/brands/discover', '/api/audits/plan/verified', '/api/audits/plan/repair'].includes(req.url)) return send(res, 404, { error: 'Not found' });
   // This is a development-only endpoint. Do not expose it publicly.
