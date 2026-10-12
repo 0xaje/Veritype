@@ -19,7 +19,8 @@ test('agent adapter obtains explicit entity selection and returns review, never 
   const client=createVeritypeAgentClient({fetchImpl:fakeFetch});
   const result=await client.inspect({
     plan:'Fixture campaign with Fixture Nike',sourceQuery:'Fixture Show',proposedBrand:'Fixture Nike',
-    chooseEntity:async matches=>matches[0].entity_id
+    chooseEntity:async matches=>matches[0].entity_id,
+    chooseAlternatives:async suggestions=>suggestions.filter(x=>x.name!=='Fixture Nike').map(x=>x.name)
   });
   assert.equal(result.status,'REVIEW_REQUIRED');
   assert.equal(result.review.human_approval_required,true);
