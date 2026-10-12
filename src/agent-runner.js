@@ -6,7 +6,7 @@ import { createVeritypeAgentClient } from './agent-client.js';
  * Interactive local agent run. Ollama extracts the literal proposal; Qloo
  * supplies evidence. The operator selects entity identity and approves nothing.
  */
-export async function runAgentReview({ plan, baseUrl = 'http://127.0.0.1:3100', fetchImpl = fetch, chooseEntity }) {
+export async function runAgentReview({ plan, baseUrl = 'http://127.0.0.1:3100', fetchImpl = fetch, chooseEntity, chooseAlternatives }) {
   if (typeof plan !== 'string' || !plan.trim()) throw new TypeError('A non-empty campaign plan is required');
   const base = new URL(baseUrl);
   if (base.protocol !== 'http:' || !['127.0.0.1','localhost'].includes(base.hostname) ||
@@ -27,7 +27,7 @@ export async function runAgentReview({ plan, baseUrl = 'http://127.0.0.1:3100', 
   const client = createVeritypeAgentClient({baseUrl,fetchImpl});
   const review = await client.inspect({
     plan,sourceQuery:extracted.source_name,proposedBrand:brands[0].candidate,
-    chooseEntity
+    chooseEntity, chooseAlternatives
   });
   return { ...review, extraction:extracted };
 }
@@ -42,6 +42,15 @@ export async function main(argv = process.argv.slice(2)){
   try{
     const result=await runAgentReview({
       plan,
+      chooseAlternatives:async (suggestions,proposedBrand)=>{
+        stdout.write('\nQloo discovered potential brands. Cultural affinity does not establish partnership category or suitability.\n');
+        for(const [i,item] of suggestions.entries())stdout.write((i+1)+'. '+item.name+'\n');
+        const answer=(await rl.question('Choose relevant comparable brands by numbers (comma-separated; Enter to stop): ')).trim();
+        if(!answer)return [];
+        const indices=answer.split(',').map(x=>x.trim());
+        if(indices.some(x=>!/^[1-9][0-9]*$/.test(x)))return [];
+        return [...new Set(indices.map(x=>Number(x)-1))].map(i=>suggestions[i]?.name).filter(Boolean).filter(name=>name.toLowerCase()!==proposedBrand.toLowerCase());
+      },
       chooseEntity:async matches=>{
         stdout.write('\nQloo returned these source candidates:\n');
         for(const [i,item] of (matches||[]).entries()){
