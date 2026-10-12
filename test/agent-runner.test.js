@@ -31,7 +31,8 @@ test('agent runner extracts via model endpoint and reviews via Qloo without repa
   calls.length=0;
   const result=await runAgentReview({
     plan:'Fixture Show with Fixture Nike',fetchImpl,
-    chooseEntity:async matches=>matches[0].entity_id
+    chooseEntity:async matches=>matches[0].entity_id,
+    chooseAlternatives:async suggestions=>suggestions.filter(x=>x.name!=='Fixture Nike').map(x=>x.name)
   });
   assert.equal(result.status,'REVIEW_REQUIRED');
   assert.equal(result.review.human_approval_required,true);
