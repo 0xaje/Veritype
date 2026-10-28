@@ -1,4 +1,4 @@
-import { validateEntitySearch } from './entity-search.js';
+import { validateEntitySearch } from './entity-search-validation.js';
 
 /**
  * Direct HTTPS Qloo transport for Worker-compatible runtimes.
