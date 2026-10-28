@@ -14,3 +14,7 @@ Prerequisites: Node 22+, Cloudflare Free account, a working Qloo key. No payment
 10. After security hardening, apply migrations to remote D1: `npx wrangler d1 migrations apply veritype-sessions --remote`, then set secret using `npx wrangler secret put QLOO_API_KEY` (interactive prompt, never a CLI argument), and only then deploy.
 
 The public Worker UI is `public/worker.html` + `public/worker-app.js`. The local Node app remains in `public/index.html` + `public/app.js`; do not expose Node-only API endpoints through the Worker.
+
+## Security update (October 28)
+
+Worker now uses D1 atomic request quotas, not KV. Remove the `[[kv_namespaces]]` block from your local `wrangler.toml` if present. Apply `0002_request_quotas.sql` using Wrangler migrations locally and remotely. Set `RATE_LIMIT_SALT` to a random private value in `.dev.vars` and later as a remote Worker secret. Never commit or share the salt. The quota is 10 requests per minute per client-IP hash. Old KV namespace may remain unused; no need to delete it during deployment preparation. Verify tests and local Qloo flow after migration. Scheduled cleanup of expired quota rows remains future maintenance.
