@@ -75,6 +75,11 @@ export async function extractPlan(
 
   const selectedModel = model !== undefined ? model : (provider === 'openai' ? process.env.OPENAI_MODEL : process.env.OLLAMA_MODEL);
 
+  if (provider === 'free_router') {
+    const { extractWithFreeProviders } = await import('./free-llm-router.js');
+    return extractWithFreeProviders(value.plan, { fetchImpl });
+  }
+
   if (provider === 'openai') {
     if (!apiKey || !selectedModel) {
       const error = new Error('Set OPENAI_API_KEY and OPENAI_MODEL to enable OpenAI extraction');
