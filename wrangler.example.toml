@@ -14,7 +14,3 @@ binding = "DB"
 database_name = "veritype-sessions"
 database_id = "REPLACE_WITH_ACTUAL_D1_DATABASE_ID"
 migrations_dir = "migrations"
-
-[[kv_namespaces]]
-binding = "RATE_LIMIT"
-id = "REPLACE_WITH_ACTUAL_KV_NAMESPACE_ID"
