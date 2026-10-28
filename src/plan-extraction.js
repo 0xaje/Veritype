@@ -132,10 +132,11 @@ export async function extractPlan(
   const endpoint = `${normalizedBase}/api/chat`;
 
   let response;
+  const timeoutMs = Number(process.env.OLLAMA_TIMEOUT_MS || 120000);
   try {
     response = await fetchImpl(endpoint, {
       method: 'POST',
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(timeoutMs),
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: selectedModel,
