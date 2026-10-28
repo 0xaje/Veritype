@@ -24,9 +24,13 @@ $('search').addEventListener('click', () => busy($('search'), async () => {
   const result = await post('/api/search', { query, take: 10 });
   if (revision !== state.revision) return;
   if (!Array.isArray(result.matches) || !result.matches.length) { notice('Qloo returned no matching entities.'); return; }
+  const duplicateNames = new Map();
+  for (const item of result.matches) duplicateNames.set(item.name, (duplicateNames.get(item.name) || 0) + 1);
   for (const item of result.matches) {
     const row = make('div', null, 'match'); const info = make('div');
-    info.append(make('strong', item.name), make('p', (item.type || 'Type unavailable') + ' · ' + item.id));
+    info.append(make('strong', item.name));
+    info.append(make('p', (item.type || 'Qloo entity') + ' · ID ' + item.id.slice(0, 8) + '…', 'entity-meta'));
+    if (duplicateNames.get(item.name) > 1) info.append(make('small', 'Same name, distinct Qloo entity ID — verify before selecting.', 'entity-caution'));
     const button = make('button', 'Select source', 'secondary'); button.type = 'button';
     button.addEventListener('click', () => busy(button, async () => {
       const current = state.revision;
@@ -51,15 +55,45 @@ $('discover').addEventListener('click', () => busy($('discover'), async () => {
   const root = $('results'); clear(root);
   const assessment = response.assessment;
   if (!assessment || !Array.isArray(assessment.results)) throw new Error('Unexpected evidence response.');
-  root.append(make('p', assessment.results.length + ' real Qloo recommendations returned. Cultural affinity is not a commercial prediction.', 'hint'));
-  if (candidate) root.append(make('p', 'Candidate: ' + candidate + ' · ' + assessment.verdict + '. ' + assessment.finding, 'hint'));
+  const observed = assessment.candidate;
+  const summary = make('section', null, 'verdict-card');
+  summary.append(make('p', 'LIVE QLOO EVIDENCE / VERIFIED SOURCE', 'verdict-kicker'));
+  if (candidate) {
+    const found = assessment.verdict === 'OBSERVED_IN_RESULTS' && observed;
+    summary.append(make('h3', found ? candidate + ' · Observed in results' : candidate + ' · ' + (assessment.verdict || 'Assessment available')));
+    if (found) {
+      const metrics = make('div', null, 'verdict-metrics');
+      const rank = make('div'); rank.append(make('strong', '#' + observed.rank), make('span', 'Rank in returned top ' + assessment.results.length));
+      const affinity = make('div'); affinity.append(make('strong', Number.isFinite(observed.affinity) ? observed.affinity.toFixed(4) : 'Unavailable'), make('span', 'Qloo affinity'));
+      metrics.append(rank, affinity); summary.append(metrics);
+    }
+    summary.append(make('p', assessment.finding || 'This evidence does not establish commercial viability.', 'verdict-explainer'));
+  } else {
+    summary.append(make('h3', assessment.results.length + ' cultural recommendations'));
+    summary.append(make('p', 'Live Qloo recommendations for your human-verified source.', 'verdict-explainer'));
+  }
+  summary.append(make('p', 'Affinity is not a probability of sponsorship, sales, or commercial success.', 'verdict-disclaimer'));
+  root.append(summary);
+  const heading = make('div', null, 'ranking-title');
+  heading.append(make('h4', 'Ranked cultural signals'), make('span', assessment.results.length + ' Qloo results'));
+  root.append(heading);
   for (const item of assessment.results) {
-    const row = make('div', null, 'affinity-row');
+    const isCandidate = !!candidate && item.entity_id === observed?.entity_id && assessment.verdict === 'OBSERVED_IN_RESULTS';
+    const row = make('div', null, 'affinity-row' + (isCandidate ? ' is-proposed' : ''));
+    const label = make('div', null, 'affinity-label');
+    label.append(make('span', '#' + item.rank + '  ' + item.name));
+    if (isCandidate) label.append(make('small', 'CHECKED BRAND', 'proposed-tag'));
     const heading = make('div', null, 'affinity-heading');
-    heading.append(make('span', '#' + item.rank + ' ' + item.name), make('strong', Number.isFinite(item.affinity) ? item.affinity.toFixed(4) : 'Unavailable'));
+    heading.append(label, make('strong', Number.isFinite(item.affinity) ? item.affinity.toFixed(4) : 'Unavailable'));
     row.append(heading);
+    if (Number.isFinite(item.affinity) && item.affinity >= 0 && item.affinity <= 1) {
+      const track = make('div', null, 'affinity-track');
+      const fill = make('div', null, 'affinity-fill');
+      fill.style.width = (item.affinity * 100).toFixed(2) + '%';
+      track.append(fill); row.append(track);
+    }
     const details = make('details', null, 'evidence');
-    details.append(make('summary', 'Inspect entity and explainability'));
+    details.append(make('summary', 'View Qloo evidence'));
     details.append(make('pre', JSON.stringify({ entity_id: item.entity_id, type: item.type, explainability: item.explainability, provenance: response.provenance }, null, 2)));
     row.append(details); root.append(row);
   }
