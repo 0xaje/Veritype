@@ -4,9 +4,9 @@ The Worker in src/cloudflare-worker.js is **not deployed**. It supports only POS
 
 Before deployment:
 1. Install Wrangler as a dev dependency and configure an actual D1 database binding named DB; apply migrations/0001_verification_sessions.sql to the target database.
-2. Configure Workers static assets binding named ASSETS and QLOO_API_KEY as a Worker secret (never put the key in wrangler config or Git).
+2. Configure Workers static assets binding named ASSETS, KV binding named RATE_LIMIT, and QLOO_API_KEY as a Worker secret (never put the key in wrangler config or Git).
 3. Implement Worker route contract integration with public/app.js. Existing frontend is not yet wired to these new endpoints.
-4. Add Worker runtime tests and rate limiting / abuse protections before exposing API routes. Browser same-origin checks are not a substitute for rate limiting or authentication.
+4. Run Worker tests. The current KV minute bucket is best-effort only because KV updates are non-atomic; add a strict Cloudflare rate limiting binding or Durable Object guard before unrestricted public access. Browser same-origin checks are not a substitute for rate limiting or authentication.
 5. Test actual deployed search → select → discover with real Qloo responses; no simulated evidence in the product.
 
 The source validation and evidence adapter are runtime-neutral; do not import src/server.js, src/qloo.js, or src/verification-flow.js into the Worker.
