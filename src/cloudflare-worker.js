@@ -32,6 +32,11 @@ export default {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/api/')) {
       if (!env.ASSETS) return json({ error: 'Static assets binding missing' }, 503);
+      // Public Worker UI is separate from the Node-only local app.
+      if (url.pathname === '/' || url.pathname === '/index.html') {
+        return env.ASSETS.fetch(new Request(new URL('/worker.html', request.url), request));
+      }
+      if (['/app.js', '/history.js', '/revision-guard.js'].includes(url.pathname)) return json({ error: 'Local-only application unavailable' }, 404);
       return env.ASSETS.fetch(request);
     }
     if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
