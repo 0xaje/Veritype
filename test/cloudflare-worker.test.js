@@ -4,13 +4,10 @@ import worker from '../src/cloudflare-worker.js';
 
 function setup() {
   const rows = new Map();
-  const kv = new Map();
+  const quotas = new Map();
   const env = {
     QLOO_API_KEY: 'unit-test-only',
-    RATE_LIMIT: {
-      async get(k) { return kv.get(k) ?? null; },
-      async put(k, v) { kv.set(k, v); }
-    },
+    RATE_LIMIT_SALT: 'unit-test-secret-only',
     DB: {
       prepare(sql) {
         return {
@@ -21,6 +18,12 @@ function setup() {
                 rows.set(args[0], { kind: args[1], payload: args[2], expires_at: args[3] });
               },
               async first() {
+                if (sql.startsWith('INSERT INTO request_quotas')) {
+                  const count = quotas.get(args[0]) ?? 0;
+                  if (count >= 10) return null;
+                  quotas.set(args[0], count + 1);
+                  return { used: count + 1 };
+                }
                 if (!sql.startsWith('SELECT')) throw Error('Unexpected SQL');
                 const r = rows.get(args[0]);
                 return r?.kind === args[1] && r.expires_at > args[2] ? { payload: r.payload } : null;
@@ -39,7 +42,7 @@ function setup() {
 }
 test('Worker fails closed without rate limiter', async () => {
   const { env, call } = setup();
-  delete env.RATE_LIMIT;
+  delete env.RATE_LIMIT_SALT;
   assert.equal((await call('/api/search', { query: 'Stranger Things' })).status, 503);
 });
 test('Worker rejects cross-site requests and non-JSON input', async () => {
