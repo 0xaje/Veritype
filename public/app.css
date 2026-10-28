@@ -95,3 +95,24 @@ footer span{color:#82776a}
 .discovery-filter{margin:18px 0 10px;padding:15px;background:#f7eee4;border:1px solid #e6d5c3}.discovery-filter label{display:block;margin-bottom:8px}.discovery-filter input{width:100%}.discovery-filter .hint{font-size:11px;line-height:1.5;margin:8px 0 0}.discovery-item[hidden]{display:none}
 
 .suitability-review{margin-top:25px;padding:20px;border:1px solid #e1cbbb;background:#fff9f1}.suitability-review h4{font-family:Georgia,serif;font-size:22px;font-weight:400;margin:0 0 9px}.suitability-review p{font-size:12px;line-height:1.6;color:#76685b}.suitability-options{display:grid;gap:12px;margin:16px 0}.suitability-options label{display:flex;align-items:flex-start;gap:9px;font-size:13px;line-height:1.5}.suitability-options input{width:auto;flex:none;accent-color:#c84d39;margin-top:3px}
+
+/* Judge-facing public Worker evidence presentation */
+.verdict-card{background:#252923;color:#f8f8f2;border-radius:12px;padding:27px;margin:24px 0 26px;border:1px solid #3b5344}
+.verdict-kicker{font-size:10px;letter-spacing:.17em;font-weight:800;color:#92d8ac;margin:0 0 12px}
+.verdict-card h3{font-size:clamp(22px,3vw,32px);line-height:1.2;letter-spacing:-.025em;font-weight:600;margin:0 0 20px;color:#fff}
+.verdict-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+.verdict-metrics>div{border:1px solid #4a6250;background:#303d32;padding:17px;border-radius:8px;display:flex;flex-direction:column;gap:7px}
+.verdict-metrics strong{font-size:clamp(25px,3vw,37px);font-variant-numeric:tabular-nums;color:#b6edc4}
+.verdict-metrics span{font-size:11px;color:#d0dacf}
+.verdict-explainer{color:#edf1e9;font-size:14px;line-height:1.6}
+.verdict-disclaimer{border-top:1px solid #4c5c4e;padding-top:14px;color:#b9c8b9;font-size:11px;line-height:1.5}
+.ranking-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:25px 0 10px}
+.ranking-title h4{font-family:Georgia,serif;font-size:23px;font-weight:400;margin:0}
+.ranking-title span{font-size:11px;color:#7a6e62}
+.affinity-row.is-proposed{padding:15px;background:#f1e8db;border:1px solid #d6c3ad;border-radius:8px;margin:8px 0}
+.affinity-row.is-proposed .affinity-fill{background:#4c936b}
+.affinity-row .evidence{margin-top:8px}
+.affinity-row .evidence summary{font-size:11px;font-weight:600;color:#7d675a}
+.entity-meta{overflow-wrap:anywhere}
+.entity-caution{display:block;color:#8a7563;font-size:10px;line-height:1.4;margin-top:4px}
+@media(max-width:550px){.verdict-card{padding:20px}.verdict-metrics{gap:8px}.verdict-metrics>div{padding:12px}.ranking-title{align-items:flex-start;flex-direction:column}}
