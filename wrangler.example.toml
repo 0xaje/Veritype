@@ -1,0 +1,20 @@
+# Copy to wrangler.toml after creating Cloudflare resources.
+# Do not commit wrangler.toml with account-specific identifiers or secrets.
+name = "veritype"
+main = "src/cloudflare-worker.js"
+compatibility_date = "2026-10-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "veritype-sessions"
+database_id = "REPLACE_WITH_ACTUAL_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_WITH_ACTUAL_KV_NAMESPACE_ID"
