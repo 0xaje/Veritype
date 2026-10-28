@@ -35,8 +35,21 @@ export default {
       return env.ASSETS.fetch(request);
     }
     if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+    if (request.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !== 'application/json') return json({ error: 'JSON content type required' }, 415);
     if (request.headers.get('origin') !== url.origin) return json({ error: 'Same-origin browser request required' }, 403);
     if (!env.QLOO_API_KEY || !env.DB) return json({ error: 'Server configuration incomplete' }, 503);
+    // A persistent per-IP quota is required before any public API request reaches Qloo.
+    if (!env.RATE_LIMIT) return json({ error: 'Rate limiting not configured' }, 503);
+    const clientIP = request.headers.get('cf-connecting-ip');
+    if (!clientIP) return json({ error: 'Cloudflare client identity required' }, 403);
+    const bucket = Math.floor(Date.now() / 60000);
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(clientIP));
+    const ipHash = [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+    const quotaKey = 'v1:' + bucket + ':' + ipHash;
+    // KV is eventually consistent: this is a best-effort abuse guard, not a strict atomic quota.
+    const used = Number(await env.RATE_LIMIT.get(quotaKey) ?? 0);
+    if (used >= 10) return json({ error: 'Request limit reached; try again shortly' }, 429);
+    await env.RATE_LIMIT.put(quotaKey, String(used + 1), { expirationTtl: 120 });
     if (!['/api/search', '/api/select', '/api/discover'].includes(url.pathname)) return json({ error: 'Route unavailable' }, 404);
     try {
       const input = await body(request);
