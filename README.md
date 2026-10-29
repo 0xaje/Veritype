@@ -1,6 +1,6 @@
 <div align="center">
 
-# VERI<span style="color:#63C08C">TYPE</span>
+# VERITYPE
 
 ### Cultural QA for AI Agents
 
