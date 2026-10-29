@@ -1,75 +1,115 @@
-# Veritype — Cultural QA for AI Agents
+<div align="center">
 
-**Verify cultural assumptions before an AI agent acts.** Veritype is an evidence-first cultural verification workflow powered by live [Qloo](https://www.qloo.com/) data. It helps a human reviewer check whether a proposed brand appears in cultural recommendations associated with a selected entertainment entity, without mistaking affinity for a prediction of business success.
+# VERI<span style="color:#63C08C">TYPE</span>
 
-**[Try the live app](https://veritype.ajepleasant.workers.dev/) · [Qloo Agentic Hackathon](https://qloo.devpost.com/) · [MIT License](LICENSE)**
+### Cultural QA for AI Agents
 
-> **Publicly deployed and usable without an account.** The hosted application supports real Qloo entity search, explicit source selection, and brand discovery with ranked affinity evidence. No mock Qloo results, fabricated affinity values, or pre-recorded success responses are served as live data.
+**Verify before acting.**
 
-## The problem
+[![Live application](https://img.shields.io/badge/LIVE_APP-OPEN_VERITYPE-1A2A20?style=for-the-badge&labelColor=142018&color=63C08C)](https://veritype.ajepleasant.workers.dev/)
+[![Watch demo](https://img.shields.io/badge/VIDEO-WATCH_DEMO-1A2A20?style=for-the-badge&labelColor=142018&color=63C08C)](https://youtu.be/1CtHiWQKtH0)
+[![Qloo Hackathon](https://img.shields.io/badge/QLOO-AGENTIC_HACKATHON-1A2A20?style=for-the-badge&labelColor=142018&color=B9B7AF)](https://qloo.devpost.com/)
+[![License: MIT](https://img.shields.io/badge/LICENSE-MIT-1A2A20?style=for-the-badge&labelColor=142018&color=63C08C)](LICENSE)
 
-AI agents can confidently recommend partnerships, activations, and brand associations without showing the cultural evidence behind their claims. A fluent recommendation is not the same thing as a defensible recommendation. Teams need to inspect the source identity, underlying signals, and limits of the evidence **before** committing to an action.
+**Real Qloo intelligence · Explicit entity verification · Inspectable cultural evidence**
 
-Veritype inserts a human-verifiable evidence checkpoint between an AI-generated idea and a decision.
+An evidence-first workflow for examining proposed brand associations before relying on AI-generated cultural recommendations.
 
-## Try it in under a minute
+### Watch the 2-minute project demonstration
 
-1. Open **https://veritype.ajepleasant.workers.dev/**.
-2. Search for **Stranger Things** and explicitly select a returned Qloo entity. Search candidates can share names but have different IDs; verify the intended entity.
-3. Enter **Vans** as the optional proposed brand and choose **Retrieve live Qloo recommendations**.
-4. Inspect the observed/not-observed assessment, the ranked top-ten brand recommendations, Qloo affinity values, and expandable explainability/provenance.
+[![Watch the Veritype demo on YouTube](https://img.youtube.com/vi/1CtHiWQKtH0/hqdefault.jpg)](https://youtu.be/1CtHiWQKtH0)
 
-**What to expect:** The result is computed from a fresh Qloo API response. A candidate may appear at a particular rank or may not appear in the returned top ten; rankings are not fixed and should not be treated as promised results.
+[**Watch on YouTube**](https://youtu.be/1CtHiWQKtH0) · [**Try the live app**](https://veritype.ajepleasant.workers.dev/) · [**Browse the source**](https://github.com/0xaje/Veritype)
 
-**Important interpretation:** An observed brand is present in the limited Qloo response; it is **not** proof of sponsorship suitability, licensing rights, sales lift, or commercial viability. Absence from the top ten is not evidence of incompatibility.
+</div>
 
-## What is implemented
+---
 
-### Public, judge-accessible workflow
+## Why Veritype exists
 
-| Capability | Status | Evidence source |
-| --- | --- | --- |
-| Public Cloudflare-hosted website | Live | Cloudflare Workers static assets |
-| Search cultural entities | Live | Qloo HTTP entity search |
-| Explicit human selection of source | Live | D1-backed short-lived verification session |
-| Retrieve brand recommendations | Live | Qloo `/v2/insights` |
-| Inspect rank, affinity and explainability | Live | Actual Qloo response, with provenance |
-| Check whether a proposed brand appears in the returned list | Live | Deterministic interpretation of live results |
-| Request throttling | Implemented | D1 atomic request quota with keyed IP hashing |
-| AI plan extraction, claim challenge, approved repair/retest | **Local development workspace only** | Node/Ollama/Qloo workflow; **not available in public Worker** |
+AI agents can confidently propose brand partnerships and cultural activations without exposing the signals behind their recommendations. A polished explanation is not proof of cultural alignment.
 
-The hosted application **does not** autonomously negotiate, approve partnerships, execute commercial transactions, or assert business outcomes. Human review remains essential.
+**Veritype provides a human-verifiable evidence checkpoint.** Users select a real cultural entity from Qloo search results, retrieve genuine Qloo brand recommendations, and inspect whether a proposed brand appears in the returned evidence.
 
-### Why Qloo matters
+It does **not** automatically approve partnerships, block agent execution, or predict commercial success.
 
-Qloo supplies the cross-domain cultural recommendation signal. Veritype does not substitute LLM guesses for cultural data: it resolves a real entity, queries Qloo Insights for brand recommendations, and displays the returned affinity and explainability alongside explicit evidence limitations. The source entity must be chosen from actual Qloo search results before Insights can be queried.
+## Try the live workflow
 
-## Architecture
+**No sign-in required:** [veritype.ajepleasant.workers.dev](https://veritype.ajepleasant.workers.dev/)
+
+| Step | What to do | What it demonstrates |
+| :-- | :-- | :-- |
+| **01 · Discover** | Search for **Stranger Things** | Live Qloo entity search |
+| **02 · Verify** | Explicitly select the intended result | Identity is selected from a genuine Qloo response |
+| **03 · Investigate** | Enter **Vans** and choose **Retrieve live Qloo recommendations** | Server-side Qloo Insights request |
+| **04 · Inspect** | Open the candidate assessment, rankings and evidence details | Observed status, affinity, explainability and provenance |
+
+> **Live data, not a scripted result.** During development, one Qloo response placed Vans at #2 of 10 with affinity around 0.9348. That is an example from a specific request, **not a guaranteed result**. Rankings and values can change.
+
+> **Evidence boundary:** Qloo affinity is not a probability of sponsorship success, licensing eligibility, sales lift or commercial viability. A brand absent from a limited top-ten result is **not** necessarily culturally incompatible.
+
+## What is available today
+
+| Capability | Public deployment | Data / implementation |
+| :-- | :--: | :-- |
+| Hosted, account-free web interface | **Live** | Cloudflare Workers static assets |
+| Cultural entity search | **Live** | Qloo HTTP search |
+| Explicit source selection | **Live** | Qloo result validation + D1 session |
+| Brand discovery | **Live** | Qloo `/v2/insights` |
+| Candidate observed/not-observed assessment | **Live** | Deterministic interpretation of returned recommendations |
+| Rankings, affinity and explainability | **Live** | Actual Qloo response and provenance |
+| Per-client request quotas | **Implemented** | D1 atomic quotas + HMAC-hashed client identifier |
+| AI plan extraction, claim challenge, repair and retest | **Local development only** | Node/Ollama/Qloo workspace; **not deployed publicly** |
+
+**Why Qloo is essential:** Qloo provides the source entities and cross-domain recommendation signals. Veritype does not ask a language model to invent brand affinity. It exposes what the Qloo response actually supports, with explicit limitations.
+
+## System architecture
 
 ```text
-Browser (Cloudflare-hosted UI)
-  │
-  ├─ POST /api/search    → Qloo HTTP entity search
-  │                       ↳ D1 short-lived search session
-  ├─ POST /api/select    → validate selected Qloo result
-  │                       ↳ D1 verification token
-  └─ POST /api/discover  → Qloo /v2/insights
-                          ↳ deterministic candidate assessment
-                          ↳ ranked affinity + provenance
-
-Cloudflare Worker
-  ├─ server-side QLOO_API_KEY (never sent to browser)
-  ├─ D1 sessions and atomic request quotas
-  └─ static site assets
+                 BROWSER · VERITYPE UI
+                          │
+             ┌────────────┼─────────────┐
+             │            │             │
+       /api/search   /api/select   /api/discover
+             │            │             │
+             ▼            ▼             ▼
+       Qloo Search    Validate ID    Qloo Insights
+             │            │             │
+             └───────┬────┘             │
+                     │                  │
+             D1 verification           │
+             sessions / tokens         │
+                     │                  │
+                     └─────────┬────────┘
+                               ▼
+                      Evidence assessment
+                       · Observed status
+                       · Ranked results
+                       · Qloo affinity
+                       · Explainability
+                       · Evidence limits
+                               │
+                               ▼
+                         HUMAN REVIEW
 ```
 
-The public Worker implementation is in `src/cloudflare-worker.js`. The direct Qloo adapter and evidence interpretation are in `src/qloo-http.js`, `src/qloo-http-executor.js`, and `src/evidence.js`. The public UI is `public/worker.html` and `public/worker-app.js`.
+**Cloudflare Worker:** `src/cloudflare-worker.js` handles the public API and static assets. The Qloo adapters are `src/qloo-http.js` and `src/qloo-http-executor.js`; evidence interpretation is in `src/evidence.js`. The public interface is `public/worker.html`, `public/worker-app.js` and `public/app.css`.
 
-The separate local Node workspace in `src/server.js` includes experimental workflows beyond the deployed feature set. It is **not** the public deployment backend.
+The Qloo key remains server-side. D1 stores short-lived verification sessions and request quotas. Requests to the public API require JSON and a same-origin browser request; the Worker checks Cloudflare client identity before applying its quota.
 
-## Run and verify locally
+**Separate local workspace:** `src/server.js` and related Node tooling support additional development workflows. They are not the deployed Cloudflare backend.
 
-**Requirements:** Node.js 22.19+, npm, Cloudflare Wrangler, a Qloo API key, and your own Cloudflare D1 database. Use the free Cloudflare tier where eligible.
+## Technology
+
+![Qloo](https://img.shields.io/badge/Qloo-Search_%26_Insights-63C08C?style=flat-square&labelColor=1A2A20)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-63C08C?style=flat-square&labelColor=1A2A20)
+![Cloudflare D1](https://img.shields.io/badge/Cloudflare-D1-63C08C?style=flat-square&labelColor=1A2A20)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES_Modules-63C08C?style=flat-square&labelColor=1A2A20)
+![Node.js](https://img.shields.io/badge/Node.js-22.19%2B-63C08C?style=flat-square&labelColor=1A2A20)
+
+## Run locally
+
+**Prerequisites:** Node.js **22.19+**, npm, Wrangler, your own Qloo API key, and a Cloudflare D1 database.
 
 ```bash
 git clone https://github.com/0xaje/Veritype.git
@@ -79,51 +119,69 @@ npx wrangler login
 npx wrangler d1 create veritype-sessions
 ```
 
-Copy `wrangler.example.toml` to `wrangler.toml`, and replace the example D1 database ID with the ID created in your account. The local `wrangler.toml` is intentionally gitignored.
+Copy `wrangler.example.toml` to `wrangler.toml` and replace the example D1 database ID with your own. The account-specific configuration is intentionally gitignored.
 
-Create a private `.dev.vars` file (also gitignored) containing:
+Create a private `.dev.vars` file (also gitignored):
 
 ```dotenv
 QLOO_API_KEY=your-own-qloo-api-key
 RATE_LIMIT_SALT=your-own-random-secret
 ```
 
-Generate the salt with `openssl rand -hex 32`. Do not commit or share these values.
+Generate a strong salt using `openssl rand -hex 32`. **Never commit API keys or secrets.**
 
 ```bash
 npx wrangler d1 migrations apply veritype-sessions --local
 npx wrangler dev --local
 ```
 
-Open **http://localhost:8787/** and complete the same real-data workflow. For production, apply migrations with `--remote`, configure both secrets using `wrangler secret put`, and run `wrangler deploy`. See [Cloudflare setup](docs/cloudflare-setup.md) for deployment notes.
+Open **http://localhost:8787/** and use the real Qloo workflow. Production deployment requires remote D1 migrations, secrets configured with `wrangler secret put`, and `wrangler deploy`. See [Cloudflare deployment notes](docs/cloudflare-setup.md).
 
-**Note:** Wrangler may require a platform-provided client IP header for the rate limiter. A CLI request that forges `CF-Connecting-IP` is only a local development convenience and is not a production authentication mechanism.
+**Local-development caveat:** The Worker relies on Cloudflare's `CF-Connecting-IP` header for quotas. A local CLI request may need a development-only header; that is not a production authentication mechanism.
 
-## Test and inspect
+## Testing and reproducibility
 
 ```bash
 npm test
 ```
 
-Automated tests cover Qloo data interpretation, request validation, verified selection, rate limiting, and frontend contracts. The public search → select → discover journey has also been exercised against genuine Qloo responses on the Cloudflare deployment. Tests use isolated fixtures; live application results are always retrieved from Qloo.
+Automated tests cover Qloo data interpretation, input validation, verified source selection, quota behavior and frontend contracts. Isolated test fixtures do **not** represent live API results. The hosted application retrieves genuine Qloo data for its discovery workflow.
 
-## Security and evidence boundaries
+For a hands-on evaluation, follow the four-step [live walkthrough](#try-the-live-workflow) and inspect the expanded evidence panel. The live service depends on Qloo availability and applicable API limits.
 
-- Qloo credentials are stored server-side as Cloudflare secrets.
-- Cross-origin and non-JSON API requests are rejected.
-- Search and selection sessions expire; a source cannot be invented by submitting an arbitrary ID.
-- Request quotas are enforced through D1; avoid exposing private IP addresses in stored identifiers.
-- Qloo's affinity and explainability are presented as evidence, not calibrated probabilities of commercial outcomes.
-- The recommendation list is limited; a missing brand is **not** negative evidence.
-- Entity identity, market context, licensing, and commercial feasibility require independent verification.
-- The live demo depends on Qloo API availability and any applicable hackathon-key limits.
+## Security and interpretation
 
-## Known limitations and roadmap
+- **Secrets:** Qloo credentials are held on the Worker, not sent to the browser.
+- **Source integrity:** Selection is validated against a short-lived session containing actual Qloo search matches; arbitrary entity IDs cannot be submitted as verified selections.
+- **Request controls:** The Worker enforces D1-backed quotas using a keyed hash of the client IP.
+- **Origin checks:** Public API requests require JSON and a matching browser origin.
+- **Evidence honesty:** Affinity and explainability are Qloo outputs, not calibrated probabilities of business outcomes.
+- **Scope:** A limited recommendation list does not establish that an omitted brand is incompatible.
+- **Human responsibility:** Rights, licensing, commercial feasibility and final partnership decisions require independent review.
 
-The public deployment currently supports one verified source and a top-ten brand discovery check. It does not yet expose the richer local plan-extraction, multi-claim audit, human-approved repair, or re-test workflows. Similar entity names can be difficult to disambiguate when Qloo search metadata is incomplete. Future work includes stronger entity disambiguation, a durable investigation history, and a public end-to-end agent review workflow.
+## Limitations and roadmap
 
-## Hackathon
+The public experience currently supports one explicitly verified cultural source and top-ten brand recommendation discovery. It does not yet offer publicly accessible AI plan extraction, multi-claim auditing, human-approved repair, or retesting. Similar source names may be difficult to disambiguate when Qloo metadata is sparse.
 
-Built for the **[Qloo Agentic Hackathon — Agents, but with taste](https://qloo.devpost.com/)**. The product's contribution is an inspectable cultural-evidence checkpoint for AI-assisted decisions: real entity identity, real cross-domain Qloo signals, explicit uncertainty, and human control.
+Future directions include improved disambiguation, durable investigation history and an end-to-end agent review workflow. **These are roadmap items, not deployed features.**
 
-**License:** [MIT](LICENSE).
+## Hackathon and links
+
+Created for the [**Qloo Agentic Hackathon — Agents, but with taste**](https://qloo.devpost.com/).
+
+| Resource | Link |
+| :-- | :-- |
+| **Live app** | https://veritype.ajepleasant.workers.dev/ |
+| **Video walkthrough** | https://youtu.be/1CtHiWQKtH0 |
+| **Repository** | https://github.com/0xaje/Veritype |
+| **License** | [MIT](LICENSE) |
+
+---
+
+<div align="center">
+
+**VERITYPE · VERIFY BEFORE ACTING**
+
+*AI can recommend. Evidence should help us decide.*
+
+</div>
